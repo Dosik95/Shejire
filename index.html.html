@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="kz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Отбасы шежіресі</title>
+<style>
+  :root{
+    --bg:#f2ecdd; --panel:#fbf8f0; --border:#ddd2ba; --border-soft:#e6dcc4;
+    --ink:#2e2a22; --ink-dim:#8a7d64; --accent:#7c8f6a; --accent-2:#9a5f56;
+    --danger:#a9564c; --card-default:#c9b28f;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;}
+  h1,h2,h3{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;}
+  .btn{border:1px solid var(--border);background:var(--panel);color:var(--ink);border-radius:10px;padding:9px 14px;font-size:13.5px;cursor:pointer;}
+  .btn:hover{border-color:var(--accent);}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+  .btn.block{width:100%;margin-top:6px;}
+  .btn.danger{color:var(--danger);border-color:#e3c3bd;background:#fff;}
+  .btn.danger:hover{border-color:var(--danger);}
+  .link{background:none;border:none;color:var(--accent-2);font-size:12.5px;cursor:pointer;text-decoration:underline;padding:0;}
+  input[type=text],input[type=password],input[type=date],textarea{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;background:#fff;font-size:14px;color:var(--ink);font-family:inherit;}
+  textarea{resize:vertical;min-height:70px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:11px;letter-spacing:.03em;color:var(--ink-dim);margin-bottom:5px;text-transform:uppercase;}
+  .row2{display:flex;gap:10px;}
+  .row2 > div{flex:1;}
+
+  .overlay{position:fixed;inset:0;background:rgba(40,32,20,.35);display:none;align-items:center;justify-content:center;z-index:70;padding:16px;}
+  .overlay.show{display:flex;}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:22px;width:320px;max-height:90vh;overflow:auto;box-shadow:0 20px 40px rgba(0,0,0,.15);position:relative;}
+  .modal h2,.modal h3{margin:0 0 4px;font-size:19px;}
+  .modal .sub{color:var(--ink-dim);font-size:12.5px;margin-bottom:18px;}
+  .login-error{color:var(--danger);font-size:12px;margin-top:6px;display:none;}
+  .switch-mode{margin-top:14px;text-align:center;font-size:12.5px;color:var(--ink-dim);}
+  .demo-hint{margin-top:16px;font-size:11px;color:var(--ink-dim);line-height:1.6;border-top:1px dashed var(--border);padding-top:10px;}
+  .close-x{position:absolute;top:16px;right:16px;background:none;border:none;font-size:18px;color:var(--ink-dim);cursor:pointer;}
+
+  header{padding:20px 26px 16px;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;}
+  .title-row{display:flex;align-items:center;gap:8px;}
+  header h1{margin:0;font-size:24px;}
+  .subtitle{color:var(--ink-dim);font-size:12.5px;font-style:italic;margin-top:2px;}
+  .top-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .lang-toggle{display:flex;background:#fff;border:1px solid var(--border);border-radius:20px;padding:3px;}
+  .lang-toggle button{border:none;background:transparent;padding:5px 12px;border-radius:16px;font-size:12px;cursor:pointer;color:var(--ink-dim);}
+  .lang-toggle button.active{background:var(--accent);color:#fff;font-weight:600;}
+  .who{font-size:11.5px;color:var(--ink-dim);text-align:right;}
+  .who b{color:var(--ink);}
+  .btn.small{padding:6px 10px;font-size:11.5px;}
+  .bell{position:relative;}
+  .bell .dot{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;font-size:9px;border-radius:10px;padding:1px 5px;}
+
+  .toolbar{padding:14px 26px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border-soft);}
+  .toolbar button{border:1px solid var(--border);background:var(--panel);border-radius:20px;padding:8px 15px;font-size:12.5px;cursor:pointer;color:var(--ink);}
+  .toolbar button:hover{border-color:var(--accent);}
+
+  #tree-wrap{padding:46px 26px 100px;overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;position:relative;}
+  .pan-btn{position:fixed;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:var(--panel);border:1px solid var(--border);color:var(--ink);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:30;box-shadow:0 4px 12px rgba(0,0,0,.12);}
+  .pan-btn.left{left:8px;}
+  .pan-btn.right{right:8px;}
+  ul.tree{display:flex;justify-content:center;padding:0;margin:0;}
+  ul.tree ul{display:flex;justify-content:center;padding:20px 0 0;margin:0;position:relative;}
+  ul.tree ul::before{content:'';position:absolute;top:0;left:calc(50% - 1px);width:2px;height:20px;background:var(--border);}
+  ul.tree li{list-style:none;display:flex;flex-direction:column;align-items:center;position:relative;padding:0 14px;}
+  ul.tree ul li{padding-top:20px;}
+  ul.tree ul li::before, ul.tree ul li::after{content:'';position:absolute;top:0;border-top:2px solid var(--border);width:50%;height:0;}
+  ul.tree ul li::before{right:50%;}
+  ul.tree ul li::after{left:50%;}
+  ul.tree ul li:only-child::before, ul.tree ul li:only-child::after{border:none;}
+  ul.tree ul li:first-child::before{border:none;}
+  ul.tree ul li:last-child::after{border:none;}
+  ul.tree ul li .vstem{position:absolute;top:0;left:calc(50% - 1px);width:2px;height:20px;background:var(--border);}
+
+  .couple{display:flex;align-items:center;gap:10px;border:1px solid var(--border);border-radius:14px;background:var(--panel);padding:14px 16px;position:relative;box-shadow:0 4px 14px rgba(60,50,20,.05);}
+  .heart{color:var(--accent-2);font-size:13px;}
+  .single .card-inner{border:1px solid var(--border);border-radius:14px;background:var(--panel);padding:14px 16px;box-shadow:0 4px 14px rgba(60,50,20,.05);}
+  .person{display:flex;flex-direction:column;align-items:center;width:104px;position:relative;cursor:pointer;}
+  .tab{position:absolute;top:-9px;width:34px;height:8px;border-radius:4px;background:var(--card-color,var(--card-default));}
+  .avatar{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"Iowan Old Style",Georgia,serif;font-size:20px;color:#5b4a30;font-weight:600;background:var(--card-color,var(--card-default));border:3px solid #fff;box-shadow:0 0 0 1px var(--border);margin-bottom:6px;background-size:cover;background-position:center;}
+  .pname{font-size:12.5px;font-weight:600;text-align:center;}
+  .pyear{font-size:10.5px;color:var(--ink-dim);}
+
+  .modal select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:9px;background:#fff;font-size:13px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
+
+  .color-picker{display:flex;gap:8px;align-items:center;}
+  .swatch-btn{width:30px;height:30px;border-radius:8px;border:2px solid transparent;cursor:pointer;position:relative;}
+  .swatch-btn.selected{border-color:var(--ink);}
+  .swatch-custom{display:flex;align-items:center;justify-content:center;background:#fff;border:1px dashed var(--border);font-size:13px;}
+  .swatch-custom input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+
+  .pd-avatar-wrap{display:flex;flex-direction:column;align-items:center;margin-top:6px;}
+  .pd-avatar{width:96px;height:96px;border-radius:50%;background:var(--card-color,var(--card-default));display:flex;align-items:center;justify-content:center;font-size:34px;font-family:"Iowan Old Style",Georgia,serif;color:#5b4a30;font-weight:600;border:4px solid #fff;box-shadow:0 0 0 1px var(--border);background-size:cover;background-position:center;}
+  .pd-name{font-family:"Iowan Old Style",Georgia,serif;font-size:20px;font-weight:700;margin-top:10px;}
+  .pd-parents{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px;}
+  .pd-pill{display:flex;align-items:center;gap:6px;background:#f3ecd8;border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:12px;}
+  .pd-divider{border-top:1px dashed var(--border);margin:18px 0 14px;}
+  .pd-section-label{font-size:12.5px;color:var(--ink-dim);margin-bottom:10px;}
+  .pd-rel-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;}
+  .pd-rel-btn{border:1px solid var(--border);background:#fff;border-radius:12px;padding:14px 6px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--ink);}
+  .pd-rel-btn:hover{border-color:var(--accent);}
+  .pd-rel-btn .em{font-size:22px;}
+  .pd-lock-note{font-size:11.5px;color:var(--ink-dim);text-align:center;margin-bottom:10px;}
+
+  .photo-row{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+  .photo-preview{width:52px;height:52px;border-radius:50%;background:var(--card-color,var(--card-default));display:flex;align-items:center;justify-content:center;color:#5b4a30;font-size:20px;background-size:cover;background-position:center;}
+  .gender-toggle{display:flex;gap:10px;}
+  .gender-btn{flex:1;padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-size:13px;font-weight:600;color:var(--ink);}
+  .gender-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  .acct-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;}
+  .acct-table th,.acct-table td{border-bottom:1px solid var(--border-soft);padding:6px 4px;text-align:left;}
+  .acct-table th{color:var(--ink-dim);font-weight:600;font-size:10.5px;text-transform:uppercase;}
+  .acct-table button{padding:3px 8px;font-size:11px;}
+
+  #requests-panel{position:fixed;right:16px;bottom:16px;width:300px;max-height:300px;overflow:auto;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px;font-size:12.5px;display:none;box-shadow:0 12px 30px rgba(0,0,0,.12);z-index:40;}
+  #requests-panel.show{display:block;}
+  #requests-panel h4{margin:0 0 8px;font-size:12px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.04em;}
+  .req-row{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid var(--border-soft);}
+  .req-row:last-child{border-bottom:none;}
+  .req-row button{padding:3px 8px;font-size:11px;}
+  .note{font-size:11px;color:var(--ink-dim);}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div>
+      <div class="title-row"><span style="font-size:20px">🌿</span><h1 id="t-title">Отбасы шежіресі</h1></div>
+      <div class="subtitle" id="t-subtitle"></div>
+    </div>
+    <div class="top-right">
+      <div class="who"><span id="who-role"></span><br><b id="who-name"></b></div>
+      <button class="btn small bell" id="bell-btn" style="display:none">🔔<span class="dot" id="bell-count" style="display:none">0</span></button>
+      <button class="btn small" id="cabinet-btn" style="display:none">👤 <span id="cabinet-label">Кабинет</span></button>
+      <button class="btn small" id="login-open-btn">Кіру</button>
+      <button class="btn small" id="logout-btn" style="display:none">Шығу</button>
+      <div class="lang-toggle"><button id="lang-ru">RU</button><button id="lang-kz" class="active">ҚАЗ</button></div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <button id="tb-add">+ <span id="tb-add-label">Адам қосу</span></button>
+    <button id="tb-print">🖨 <span id="tb-print-label">Басып шығару / PDF</span></button>
+    <button id="tb-export">⬇ <span id="tb-export-label">Экспорттау</span></button>
+    <button id="tb-import">⬆ <span id="tb-import-label">Импорттау</span></button>
+    <input type="file" id="import-file" accept="application/json" style="display:none">
+  </div>
+
+  <div id="tree-wrap">
+    <button class="pan-btn left" id="pan-left">◀</button>
+    <button class="pan-btn right" id="pan-right">▶</button>
+    <ul class="tree" id="tree-root"></ul>
+  </div>
+</div>
+
+<div class="overlay" id="overlay-login">
+  <div class="modal">
+    <button class="close-x" id="login-close-x">✕</button>
+    <h2 id="login-title">Кіру</h2>
+    <div class="sub" id="login-sub">Логин мен парольді енгізіңіз</div>
+    <div class="field"><label id="lbl-login">Логин</label><input type="text" id="login-user"></div>
+    <div class="field" id="reg-email-field" style="display:none">
+      <label id="lbl-email">Email</label><input type="text" id="reg-email" placeholder="name@example.com">
+    </div>
+    <div class="field"><label id="lbl-pass">Пароль</label><input type="password" id="login-pass"></div>
+    <div class="field" id="reg-confirm-field" style="display:none">
+      <label id="lbl-pass2">Парольді қайталаңыз</label><input type="password" id="reg-pass2">
+    </div>
+    <div class="field" id="remember-field" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <input type="checkbox" id="remember-me" style="width:auto;">
+      <label for="remember-me" id="lbl-remember" style="margin:0;text-transform:none;font-size:12.5px;color:var(--ink)">Парольді есте сақтау</label>
+    </div>
+    <button class="btn primary block" id="login-btn">Кіру</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="switch-mode" style="display:flex;flex-direction:column;gap:6px">
+      <div><span id="switch-text">Аккаунтыңыз жоқ па?</span> <button class="link" id="switch-btn">Тіркелу</button></div>
+      <button class="link" id="forgot-btn">Парольді ұмыттыңыз ба?</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay-recovery">
+  <div class="modal">
+    <button class="close-x" id="recovery-close-x">✕</button>
+    <h3 id="recovery-title">Парольді қалпына келтіру</h3>
+    <div class="sub" id="recovery-sub">Аккаунтқа байланысты email енгізіңіз</div>
+    <div id="recovery-step1">
+      <div class="field"><label id="lbl-recovery-login">Логин</label><input type="text" id="recovery-login"></div>
+      <button class="btn primary block" id="recovery-send-btn">Кодты жіберу</button>
+    </div>
+    <div id="recovery-step2" style="display:none">
+      <div class="note" id="recovery-demo-note" style="margin-bottom:10px"></div>
+      <div class="field"><label id="lbl-recovery-code">Растау коды</label><input type="text" id="recovery-code"></div>
+      <div class="field"><label id="lbl-recovery-newpass">Жаңа пароль</label><input type="password" id="recovery-newpass"></div>
+      <button class="btn primary block" id="recovery-save-btn">Сақтау</button>
+    </div>
+    <div class="login-error" id="recovery-error"></div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay-add">
+  <div class="modal">
+    <button class="close-x" id="add-close-x">✕</button>
+    <h3 id="modal-add-title">Туысты қосу</h3>
+    <div class="field"><label id="lbl-anchor">Кімге қатысты қосылады</label><select id="anchor-select"></select></div>
+    <div class="field"><label id="lbl-relation">Кім болады</label><select id="rel-type"></select></div>
+    <div class="field"><label id="lbl-name">Аты</label><input type="text" id="rel-name"></div>
+    <div class="field"><label id="lbl-color">Жақтау түсі</label><div class="color-picker" id="add-color-picker"></div></div>
+    <div class="modal-actions">
+      <button class="btn" id="add-cancel">Бас тарту</button>
+      <button class="btn primary" id="add-save">Қосу</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay-detail">
+  <div class="modal">
+    <button class="close-x" id="detail-close-x">✕</button>
+    <h3 id="detail-title">Адам туралы ақпарат</h3>
+    <div class="pd-avatar-wrap"><div class="pd-avatar" id="pd-avatar">A</div><div class="pd-name" id="pd-name">—</div></div>
+    <div class="pd-parents" id="pd-parents"></div>
+    <div class="pd-divider"></div>
+    <div id="pd-add-section">
+      <div class="pd-section-label" id="pd-add-label">Туыс қосу</div>
+      <div class="pd-rel-grid">
+        <button class="pd-rel-btn" id="pd-son"><span class="em">👦</span><span id="pd-son-label">Ұл</span></button>
+        <button class="pd-rel-btn" id="pd-daughter"><span class="em">👧</span><span id="pd-daughter-label">Қыз</span></button>
+        <button class="pd-rel-btn" id="pd-spouse"><span class="em">💍</span><span id="pd-spouse-label">Жұбайы</span></button>
+      </div>
+    </div>
+    <div class="pd-lock-note" id="pd-lock-note" style="display:none"></div>
+    <button class="btn block" id="pd-edit-btn">Өңдеу</button>
+    <button class="btn block danger" id="pd-delete-btn">Шежіреден өшіру</button>
+    <button class="btn primary block" id="pd-request-btn" style="display:none">Рұқсат сұрау</button>
+    <button class="btn primary block" id="pd-login-prompt-btn" style="display:none">Кіру</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay-edit">
+  <div class="modal">
+    <button class="close-x" id="edit-close-x">✕</button>
+    <h3 id="edit-title">Өңдеу</h3>
+    <div class="photo-row">
+      <div class="photo-preview" id="edit-photo-preview">A</div>
+      <button class="btn small" id="edit-photo-btn" style="position:relative;overflow:hidden">
+        <span id="edit-photo-label">Фото жүктеу</span>
+        <input type="file" accept="image/*" id="edit-photo-input" style="position:absolute;inset:0;opacity:0;cursor:pointer">
+      </button>
+    </div>
+    <div class="field"><label id="edit-lbl-name">Аты-жөні</label><input type="text" id="edit-name"></div>
+    <div class="field">
+      <label id="edit-lbl-gender">Жынысы</label>
+      <div class="gender-toggle">
+        <button type="button" class="gender-btn" id="edit-gender-m">Ер</button>
+        <button type="button" class="gender-btn" id="edit-gender-f">Әйел</button>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field"><label id="edit-lbl-birth">Туған күні</label><input type="date" id="edit-birth"></div>
+      <div class="field"><label id="edit-lbl-death">Қайтыс болған күні</label><input type="date" id="edit-death"></div>
+    </div>
+    <div class="field"><label id="edit-lbl-notes">Ескертпелер</label><textarea id="edit-notes" placeholder="Міндетті емес"></textarea></div>
+    <div class="field"><label id="edit-lbl-color">Жақтау түсі</label><div class="color-picker" id="edit-color-picker"></div></div>
+    <div class="modal-actions">
+      <button class="btn" id="edit-cancel">Бас тарту</button>
+      <button class="btn primary" id="edit-save">Сақтау</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay-cabinet">
+  <div class="modal" style="width:420px">
+    <button class="close-x" id="cabinet-close-x">✕</button>
+    <h3 id="cabinet-title">Жеке кабинет</h3>
+    <div class="field"><label id="cab-lbl-login">Логин</label><input type="text" id="cab-login"></div>
+    <div class="field"><label id="cab-lbl-pass">Жаңа пароль</label><input type="password" id="cab-pass" placeholder="•••••• (өзгертпесеңіз бос қалдырыңыз)"></div>
+    <button class="btn primary block" id="cab-save">Сақтау</button>
+    <div id="cab-owner-section" style="display:none;margin-top:18px">
+      <div class="pd-divider"></div>
+      <div class="pd-section-label" id="cab-all-label">Барлық аккаунттар</div>
+      <table class="acct-table" id="acct-table"></table>
+      <div class="pd-divider"></div>
+      <div class="pd-section-label" id="cab-history-label">Рұқсаттар тарихы</div>
+      <table class="acct-table" id="grants-table"></table>
+    </div>
+  </div>
+</div>
+
+<div id="requests-panel">
+  <h4 id="reqs-header">Хабарламалар</h4>
+  <div id="reqs-list"></div>
+</div>
+
+<script>
+const DICT = {
+  ru:{
+    loginTitle:"Вход", loginSub:"Введите логин и пароль", login:"Логин", pass:"Пароль", pass2:"Повторите пароль",
+    loginBtn:"Войти", loginError:"Неверный логин или пароль", registerBtn:"Зарегистрироваться",
+    haveAcc:"Уже есть аккаунт?", noAcc:"Нет аккаунта?", signIn:"Войти", signUp:"Регистрация",
+    regTitleSub:"Создайте аккаунт",
+    email:"Email", remember:"Запомнить пароль", forgotPassword:"Забыли пароль?",
+    recoveryTitle:"Восстановление пароля", recoverySub:"Введите логин, привязанный к аккаунту",
+    recoveryLogin:"Логин", recoverySend:"Отправить код", recoveryCode:"Код подтверждения",
+    recoveryNewPass:"Новый пароль", recoverySave:"Сохранить", recoveryNotFound:"Аккаунт не найден",
+    recoveryCodeWrong:"Неверный код", recoverySuccess:"Пароль изменён, войдите заново",
+    recoveryDemoNote:"Письмо с кодом отправлено на почту (в этом прототипе код показан здесь для проверки):",
+    noEmailNote:"У аккаунта не указан email — восстановление недоступно",
+    title:"Родословная семьи", subtitlePfx:"в дереве", people:"человек",
+    roleOwner:"Главный аккаунт", roleViewer:"Обычный аккаунт", roleGuest:"Гость (только просмотр)",
+    logout:"Выйти", cabinet:"Кабинет", loginBtnHeader:"Войти",
+    addPerson:"Добавить человека", print:"Печать / PDF", exportBtn:"Экспорт", importBtn:"Импорт",
+    modalAddTitle:"Добавить родственника", anchor:"Кому добавляем", relation:"Кем приходится",
+    name:"Имя", color:"Цвет рамки", cancel:"Отмена", add:"Добавить",
+    son:"Сын", daughter:"Дочь", spouse:"Супруг(а)", personInfo:"Информация о человеке",
+    father:"Отец", mother:"Мать", addRelative:"Добавить родственника",
+    edit:"Редактировать", deleteBtn:"Удалить из древа", requestPerm:"Запросить право",
+    lockedNote:"Только просмотр — нет прав редактирования для этого человека",
+    guestNote:"Только просмотр — войдите в аккаунт для запроса прав",
+    reqHeader:"Уведомления", approve:"Разрешить", deny:"Отклонить", noReq:"Нет уведомлений",
+    reqLine:"хочет добавлять и редактировать своё у", editSave:"Сохранить",
+    cabinetTitle:"Личный кабинет", cabLogin:"Логин", cabPass:"Новый пароль",
+    cabSave:"Сохранить", allAccounts:"Логины и пароли всех аккаунтов",
+    historyLabel:"История выданных разрешений", revoke:"Отозвать", revoked:"отозвано", active:"активно",
+    deleteHasKids:"Нельзя удалить: сначала удалите потомков", requestSent:"Запрос отправлен главному аккаунту",
+    cannotDeleteSelfEdit:"Нет прав на удаление", fullName:"Аты-жөні", gender:"Пол", male:"Муж", female:"Жен",
+    birth:"Дата рождения", death:"Дата смерти", notes:"Заметки", notesPh:"Необязательно", photoUpload:"Загрузить фото",
+    customColor:"свой цвет",
+  },
+  kz:{
+    loginTitle:"Кіру", loginSub:"Логин мен парольді енгізіңіз", login:"Логин", pass:"Пароль", pass2:"Парольді қайталаңыз",
+    loginBtn:"Кіру", loginError:"Логин немесе пароль қате", registerBtn:"Тіркелу",
+    haveAcc:"Аккаунтыңыз бар ма?", noAcc:"Аккаунтыңыз жоқ па?", signIn:"Кіру", signUp:"Тіркелу",
+    regTitleSub:"Аккаунт құрыңыз",
+    email:"Email", remember:"Парольді есте сақтау", forgotPassword:"Парольді ұмыттыңыз ба?",
+    recoveryTitle:"Парольді қалпына келтіру", recoverySub:"Аккаунтқа байланысты логинді енгізіңіз",
+    recoveryLogin:"Логин", recoverySend:"Кодты жіберу", recoveryCode:"Растау коды",
+    recoveryNewPass:"Жаңа пароль", recoverySave:"Сақтау", recoveryNotFound:"Аккаунт табылмады",
+    recoveryCodeWrong:"Код қате", recoverySuccess:"Пароль өзгертілді, қайта кіріңіз",
+    recoveryDemoNote:"Кодпен хат поштаға жіберілді (бұл прототипте код тексеру үшін осында көрсетіледі):",
+    noEmailNote:"Аккаунтта email көрсетілмеген — қалпына келтіру қолжетімсіз",
+    title:"Отбасы шежіресі", subtitlePfx:"шежіреде", people:"адам",
+    roleOwner:"Басты аккаунт", roleViewer:"Қосымша аккаунт", roleGuest:"Қонақ (тек қарау)",
+    logout:"Шығу", cabinet:"Кабинет", loginBtnHeader:"Кіру",
+    addPerson:"Адам қосу", print:"Басып шығару / PDF", exportBtn:"Экспорттау", importBtn:"Импорттау",
+    modalAddTitle:"Туысты қосу", anchor:"Кімге қатысты қосылады", relation:"Кім болады",
+    name:"Аты", color:"Жақтау түсі", cancel:"Бас тарту", add:"Қосу",
+    son:"Ұлы", daughter:"Қызы", spouse:"Жұбайы", personInfo:"Адам туралы ақпарат",
+    father:"Әкесі", mother:"Анасы", addRelative:"Туыс қосу",
+    edit:"Өңдеу", deleteBtn:"Шежіреден өшіру", requestPerm:"Рұқсат сұрау",
+    lockedNote:"Тек қарау — бұл адамға өңдеу құқығыңыз жоқ",
+    guestNote:"Тек қарау — рұқсат сұрау үшін аккаунтқа кіріңіз",
+    reqHeader:"Хабарламалар", approve:"Рұқсат ету", deny:"Бас тарту", noReq:"Хабарламалар жоқ",
+    reqLine:"мынаған қосу/өңдеу құқығын сұрайды:", editSave:"Сақтау",
+    cabinetTitle:"Жеке кабинет", cabLogin:"Логин", cabPass:"Жаңа пароль",
+    cabSave:"Сақтау", allAccounts:"Барлық аккаунттардың логин/парольдері",
+    historyLabel:"Берілген рұқсаттар тарихы", revoke:"Қайтарып алу", revoked:"қайтарылды", active:"белсенді",
+    deleteHasKids:"Өшіру мүмкін емес: алдымен ұрпақтарын өшіріңіз", requestSent:"Сұрау басты аккаунтқа жіберілді",
+    cannotDeleteSelfEdit:"Өшіруге құқығыңыз жоқ", fullName:"Аты-жөні", gender:"Жынысы", male:"Ер", female:"Әйел",
+    birth:"Туған күні", death:"Қайтыс болған күні", notes:"Ескертпелер", notesPh:"Міндетті емес", photoUpload:"Фото жүктеу",
+    customColor:"өз түсің",
+  }
+};
+let lang='kz';
+function t(k){return DICT[lang][k];}
+let authMode='login';
+
+const ACCOUNTS = { admin:{password:'admin123', role:'owner', email:''}, user:{password:'user123', role:'viewer', email:''} };
+let currentAccount=null;
+let rememberedLogin=null; // in-memory only for this tab session — see note on real persistence below
+let grantedByAccount={};
+let grantsHistory=[];
+let requests=[];
+let recentColorsByAccount={};
+const DEFAULT_COLOR='#c9b28f';
+const DEFAULT_SWATCHES=['#c9b28f','#7c8f6a','#9a5f56'];
+
+let people = {
+  p1:{id:'p1',name:'Ерлан',gender:'M',color:'#c9b28f',photo:null,birth:'',death:'',notes:'',spouseId:'p2',fatherId:null,motherId:null,addedBy:'admin'},
+  p2:{id:'p2',name:'Айгуль',gender:'F',color:'#c9b28f',photo:null,birth:'',death:'',notes:'',spouseId:'p1',fatherId:null,motherId:null,addedBy:'admin'},
+  p3:{id:'p3',name:'Асан',gender:'M',color:'#c9b28f',photo:null,birth:'',death:'',notes:'',spouseId:null,fatherId:'p1',motherId:'p2',addedBy:'admin'},
+  p4:{id:'p4',name:'Ерсая',gender:'F',color:'#c9b28f',photo:null,birth:'',death:'',notes:'',spouseId:null,fatherId:'p1',motherId:'p2',addedBy:'admin'},
+  p5:{id:'p5',name:'Айсая',gender:'F',color:'#c9b28f',photo:null,birth:'',death:'',notes:'',spouseId:null,fatherId:'p1',motherId:'p2',addedBy:'admin'},
+};
+let rootId='p1'; let idCounter=6;
+
+function isDescendantOrSelf(ancestorId,id){
+  if(ancestorId===id) return true;
+  const p=people[id]; if(!p) return false;
+  if(p.fatherId===ancestorId||p.motherId===ancestorId) return true;
+  if(p.fatherId && isDescendantOrSelf(ancestorId,p.fatherId)) return true;
+  if(p.motherId && isDescendantOrSelf(ancestorId,p.motherId)) return true;
+  return false;
+}
+function myGrants(){ return currentAccount ? (grantedByAccount[currentAccount.login] || []) : []; }
+function canAddUnder(personId){
+  if(!currentAccount) return false;
+  if(currentAccount.role==='owner') return true;
+  return myGrants().some(g=>isDescendantOrSelf(g,personId));
+}
+function canEditNode(personId){
+  if(!currentAccount) return false;
+  if(currentAccount.role==='owner') return true;
+  const p=people[personId]; if(!p) return false;
+  const inGrantedTree = myGrants().some(g=>isDescendantOrSelf(g,personId));
+  return inGrantedTree && p.addedBy===currentAccount.login;
+}
+function childrenOf(personId){ return Object.values(people).filter(p=>p.fatherId===personId||p.motherId===personId); }
+function initials(name){ return (name||'?').trim().charAt(0).toUpperCase(); }
+
+function pushRecentColor(color){
+  const key = currentAccount ? currentAccount.login : '__guest__';
+  if(!recentColorsByAccount[key]) recentColorsByAccount[key]=[];
+  const arr=recentColorsByAccount[key];
+  const filtered=arr.filter(c=>c!==color);
+  filtered.unshift(color);
+  recentColorsByAccount[key]=filtered.slice(0,3);
+}
+function getRecentColors(){
+  const key = currentAccount ? currentAccount.login : '__guest__';
+  const arr = recentColorsByAccount[key] || [];
+  const result = arr.slice(0,3);
+  DEFAULT_SWATCHES.forEach(c=>{ if(result.length<3 && !result.includes(c)) result.push(c); });
+  return result.slice(0,3);
+}
+function renderColorPicker(containerId, currentValue, onChange){
+  const container=document.getElementById(containerId);
+  container.innerHTML='';
+  let selected=currentValue;
+  const swatches=getRecentColors();
+  swatches.forEach(c=>{
+    const b=document.createElement('button'); b.type='button'; b.className='swatch-btn'+(c===selected?' selected':'');
+    b.style.background=c;
+    b.onclick=()=>{ selected=c; onChange(c); [...container.querySelectorAll('.swatch-btn')].forEach(x=>x.classList.remove('selected')); b.classList.add('selected'); };
+    container.appendChild(b);
+  });
+  const customWrap=document.createElement('div');
+  customWrap.className='swatch-btn swatch-custom';
+  customWrap.title=t('customColor');
+  customWrap.textContent='🎨';
+  const isCustom = !swatches.includes(selected);
+  if(isCustom){ customWrap.classList.add('selected'); customWrap.style.background=selected; customWrap.textContent=''; }
+  const input=document.createElement('input'); input.type='color'; input.value=selected;
+  input.oninput=(e)=>{ selected=e.target.value; onChange(selected); [...container.querySelectorAll('.swatch-btn')].forEach(x=>x.classList.remove('selected')); customWrap.classList.add('selected'); customWrap.style.background=selected; customWrap.textContent=''; };
+  customWrap.appendChild(input);
+  container.appendChild(customWrap);
+  return { get:()=>selected };
+}
+
+function applyLoginLang(){
+  document.getElementById('lbl-login').textContent=t('login');
+  document.getElementById('lbl-pass').textContent=t('pass');
+  document.getElementById('lbl-pass2').textContent=t('pass2');
+  document.getElementById('login-error').textContent=t('loginError');
+  document.getElementById('login-open-btn').textContent=t('loginBtnHeader');
+  document.getElementById('lbl-email').textContent=t('email');
+  document.getElementById('lbl-remember').textContent=t('remember');
+  document.getElementById('forgot-btn').textContent=t('forgotPassword');
+  if(authMode==='login'){
+    document.getElementById('login-title').textContent=t('loginTitle');
+    document.getElementById('login-sub').textContent=t('loginSub');
+    document.getElementById('login-btn').textContent=t('loginBtn');
+    document.getElementById('reg-confirm-field').style.display='none';
+    document.getElementById('reg-email-field').style.display='none';
+    document.getElementById('switch-text').textContent=t('noAcc');
+    document.getElementById('switch-btn').textContent=t('signUp');
+  } else {
+    document.getElementById('login-title').textContent=t('registerBtn');
+    document.getElementById('login-sub').textContent=t('regTitleSub');
+    document.getElementById('login-btn').textContent=t('registerBtn');
+    document.getElementById('reg-confirm-field').style.display='block';
+    document.getElementById('reg-email-field').style.display='block';
+    document.getElementById('switch-text').textContent=t('haveAcc');
+    document.getElementById('switch-btn').textContent=t('signIn');
+  }
+}
+document.getElementById('login-open-btn').onclick=()=>{
+  document.getElementById('login-error').style.display='none';
+  if(rememberedLogin){ document.getElementById('login-user').value=rememberedLogin; document.getElementById('remember-me').checked=true; }
+  document.getElementById('overlay-login').classList.add('show');
+};
+document.getElementById('recovery-close-x').onclick=()=>document.getElementById('overlay-recovery').classList.remove('show');
+document.getElementById('forgot-btn').onclick=()=>{
+  document.getElementById('recovery-title').textContent=t('recoveryTitle');
+  document.getElementById('recovery-sub').textContent=t('recoverySub');
+  document.getElementById('lbl-recovery-login').textContent=t('recoveryLogin');
+  document.getElementById('recovery-send-btn').textContent=t('recoverySend');
+  document.getElementById('lbl-recovery-code').textContent=t('recoveryCode');
+  document.getElementById('lbl-recovery-newpass').textContent=t('recoveryNewPass');
+  document.getElementById('recovery-save-btn').textContent=t('recoverySave');
+  document.getElementById('recovery-login').value='';
+  document.getElementById('recovery-code').value='';
+  document.getElementById('recovery-newpass').value='';
+  document.getElementById('recovery-step1').style.display='block';
+  document.getElementById('recovery-step2').style.display='none';
+  document.getElementById('recovery-error').style.display='none';
+  document.getElementById('overlay-login').classList.remove('show');
+  document.getElementById('overlay-recovery').classList.add('show');
+};
+let recoveryCode=null; let recoveryTargetLogin=null;
+document.getElementById('recovery-send-btn').onclick=()=>{
+  const login=document.getElementById('recovery-login').value.trim();
+  const errEl=document.getElementById('recovery-error');
+  const acc=ACCOUNTS[login];
+  if(!acc){ errEl.textContent=t('recoveryNotFound'); errEl.style.display='block'; return; }
+  if(!acc.email){ errEl.textContent=t('noEmailNote'); errEl.style.display='block'; return; }
+  errEl.style.display='none';
+  recoveryTargetLogin=login;
+  recoveryCode=String(Math.floor(100000+Math.random()*900000));
+  document.getElementById('recovery-demo-note').textContent = t('recoveryDemoNote')+' '+recoveryCode;
+  document.getElementById('recovery-step1').style.display='none';
+  document.getElementById('recovery-step2').style.display='block';
+};
+document.getElementById('recovery-save-btn').onclick=()=>{
+  const code=document.getElementById('recovery-code').value.trim();
+  const newPass=document.getElementById('recovery-newpass').value;
+  const errEl=document.getElementById('recovery-error');
+  if(code!==recoveryCode){ errEl.textContent=t('recoveryCodeWrong'); errEl.style.display='block'; return; }
+  if(!newPass){ return; }
+  ACCOUNTS[recoveryTargetLogin].password=newPass;
+  alert(t('recoverySuccess'));
+  document.getElementById('overlay-recovery').classList.remove('show');
+  document.getElementById('overlay-login').classList.add('show');
+};
+document.getElementById('login-close-x').onclick=()=>document.getElementById('overlay-login').classList.remove('show');
+document.getElementById('switch-btn').onclick=()=>{ authMode = authMode==='login'?'register':'login'; document.getElementById('login-error').style.display='none'; applyLoginLang(); };
+
+function refreshHeaderForAuth(){
+  const loggedIn = !!currentAccount;
+  document.getElementById('bell-btn').style.display = (loggedIn && currentAccount.role==='owner') ? 'inline-flex':'none';
+  document.getElementById('cabinet-btn').style.display = loggedIn ? 'inline-flex':'none';
+  document.getElementById('login-open-btn').style.display = loggedIn ? 'none':'inline-flex';
+  document.getElementById('logout-btn').style.display = loggedIn ? 'inline-flex':'none';
+  document.getElementById('who-role').textContent = !loggedIn ? t('roleGuest') : (currentAccount.role==='owner'?t('roleOwner'):t('roleViewer'));
+  document.getElementById('who-name').textContent = loggedIn ? currentAccount.login : '';
+}
+document.getElementById('login-btn').onclick=()=>{
+  const u=document.getElementById('login-user').value.trim();
+  const p=document.getElementById('login-pass').value;
+  const errEl=document.getElementById('login-error');
+  if(authMode==='login'){
+    const acc=ACCOUNTS[u];
+    if(acc && acc.password===p){ currentAccount={login:u, role:acc.role}; if(document.getElementById('remember-me').checked) rememberedLogin=u; else rememberedLogin=null; document.getElementById('overlay-login').classList.remove('show'); refreshHeaderForAuth(); renderTree(); updateRequestsUI(); }
+    else { errEl.textContent=t('loginError'); errEl.style.display='block'; }
+  } else {
+    const p2=document.getElementById('reg-pass2').value;
+    if(!u || !p){ errEl.textContent = lang==='ru' ? 'Заполните логин и пароль' : 'Логин мен парольді толтырыңыз'; errEl.style.display='block'; return; }
+    if(ACCOUNTS[u]){ errEl.textContent = lang==='ru' ? 'Такой логин уже занят' : 'Мұндай логин бос емес'; errEl.style.display='block'; return; }
+    if(p!==p2){ errEl.textContent = lang==='ru' ? 'Пароли не совпадают' : 'Парольдер сәйкес келмейді'; errEl.style.display='block'; return; }
+    const email=document.getElementById('reg-email').value.trim();
+    ACCOUNTS[u]={password:p, role:'viewer', email};
+    currentAccount={login:u, role:'viewer'};
+    if(document.getElementById('remember-me').checked) rememberedLogin=u;
+    document.getElementById('overlay-login').classList.remove('show');
+    refreshHeaderForAuth(); renderTree(); updateRequestsUI();
+  }
+};
+document.getElementById('logout-btn').onclick=()=>{
+  currentAccount=null; refreshHeaderForAuth(); renderTree(); updateRequestsUI();
+};
+
+function avatarStyle(person){
+  if(person.photo) return `background-image:url('${person.photo}');--card-color:${person.color}`;
+  return `--card-color:${person.color}`;
+}
+function renderCardPerson(person){
+  const wrap=document.createElement('div'); wrap.className='person';
+  wrap.innerHTML=`<div class="tab" style="--card-color:${person.color}"></div>
+    <div class="avatar" style="${avatarStyle(person)}">${person.photo?'':initials(person.name)}</div>
+    <div class="pname">${person.name}</div><div class="pyear">${person.birth?person.birth.slice(0,4):'?'}</div>`;
+  wrap.onclick=()=>openDetail(person.id);
+  return wrap;
+}
+function buildCoupleNode(person){
+  const holder=document.createElement('div'); holder.style.position='relative';
+  if(person.spouseId && people[person.spouseId]){
+    const spouse=people[person.spouseId];
+    const couple=document.createElement('div'); couple.className='couple';
+    const first= person.gender==='M'?person:spouse; const second= person.gender==='M'?spouse:person;
+    couple.appendChild(renderCardPerson(first));
+    const heart=document.createElement('div'); heart.className='heart'; heart.textContent='♥'; couple.appendChild(heart);
+    couple.appendChild(renderCardPerson(second));
+    holder.appendChild(couple);
+  } else {
+    const single=document.createElement('div'); single.className='single';
+    const inner=document.createElement('div'); inner.className='card-inner';
+    inner.appendChild(renderCardPerson(person)); single.appendChild(inner); holder.appendChild(single);
+  }
+  return holder;
+}
+function buildLi(personId, isRoot){
+  const person=people[personId]; const li=document.createElement('li');
+  if(!isRoot){ const vstem=document.createElement('div'); vstem.className='vstem'; li.appendChild(vstem); }
+  li.appendChild(buildCoupleNode(person));
+  const kids=childrenOf(personId);
+  if(kids.length){ const ul=document.createElement('ul'); kids.forEach(k=>ul.appendChild(buildLi(k.id, false))); li.appendChild(ul); }
+  return li;
+}
+function renderTree(){
+  const root=document.getElementById('tree-root'); root.innerHTML='';
+  const li=buildLi(rootId, true); root.appendChild(li);
+  document.getElementById('t-subtitle').textContent = `${t('subtitlePfx')} ${Object.keys(people).length} ${t('people')}`;
+  const wrap=document.getElementById('tree-wrap');
+  requestAnimationFrame(()=>{ wrap.scrollLeft = Math.max(0, (wrap.scrollWidth - wrap.clientWidth) / 2); });
+}
+
+let detailPersonId=null;
+function openDetail(personId){
+  detailPersonId=personId;
+  const p=people[personId];
+  document.getElementById('detail-title').textContent=t('personInfo');
+  document.getElementById('pd-avatar').style.cssText = 'background-size:cover;background-position:center;' + (p.photo?`background-image:url('${p.photo}');`:'') + `--card-color:${p.color}`;
+  document.getElementById('pd-avatar').textContent = p.photo?'':initials(p.name);
+  document.getElementById('pd-name').textContent=p.name;
+
+  const father=p.fatherId?people[p.fatherId]:null;
+  const mother=p.motherId?people[p.motherId]:null;
+  const parentsEl=document.getElementById('pd-parents'); parentsEl.innerHTML='';
+  if(father) parentsEl.innerHTML+=`<div class="pd-pill">👨 ${t('father')}: ${father.name}</div>`;
+  if(mother) parentsEl.innerHTML+=`<div class="pd-pill">👩 ${t('mother')}: ${mother.name}</div>`;
+  if(p.spouseId && people[p.spouseId]) parentsEl.innerHTML+=`<div class="pd-pill">💍 ${t('spouse')}: ${people[p.spouseId].name}</div>`;
+
+  document.getElementById('pd-son-label').textContent=t('son');
+  document.getElementById('pd-daughter-label').textContent=t('daughter');
+  document.getElementById('pd-spouse-label').textContent=t('spouse');
+  document.getElementById('pd-add-label').textContent=t('addRelative');
+  document.getElementById('pd-edit-btn').textContent=t('edit');
+  document.getElementById('pd-delete-btn').textContent=t('deleteBtn');
+  document.getElementById('pd-request-btn').textContent='🔒 '+t('requestPerm');
+  document.getElementById('pd-login-prompt-btn').textContent=t('loginBtnHeader');
+
+  const addAllowed=canAddUnder(personId);
+  const editAllowed=canEditNode(personId);
+  const guest = !currentAccount;
+  document.getElementById('pd-add-section').style.display = addAllowed ? 'block':'none';
+  document.getElementById('pd-edit-btn').style.display = editAllowed ? 'block':'none';
+  document.getElementById('pd-delete-btn').style.display = editAllowed ? 'block':'none';
+  document.getElementById('pd-lock-note').style.display = (!addAllowed) ? 'block':'none';
+  document.getElementById('pd-lock-note').textContent = guest ? t('guestNote') : t('lockedNote');
+  document.getElementById('pd-request-btn').style.display = (!addAllowed && !guest) ? 'block':'none';
+  document.getElementById('pd-login-prompt-btn').style.display = (!addAllowed && guest) ? 'block':'none';
+
+  document.getElementById('overlay-detail').classList.add('show');
+}
+document.getElementById('detail-close-x').onclick=()=>document.getElementById('overlay-detail').classList.remove('show');
+document.getElementById('pd-son').onclick=()=>{ document.getElementById('overlay-detail').classList.remove('show'); openAddModal(detailPersonId,'son'); };
+document.getElementById('pd-daughter').onclick=()=>{ document.getElementById('overlay-detail').classList.remove('show'); openAddModal(detailPersonId,'daughter'); };
+document.getElementById('pd-spouse').onclick=()=>{ document.getElementById('overlay-detail').classList.remove('show'); openAddModal(detailPersonId,'spouse'); };
+document.getElementById('pd-login-prompt-btn').onclick=()=>{ document.getElementById('overlay-detail').classList.remove('show'); document.getElementById('overlay-login').classList.add('show'); };
+document.getElementById('pd-request-btn').onclick=()=>{
+  const personId=detailPersonId;
+  if(requests.find(r=>r.personId===personId && r.fromLogin===currentAccount.login)){ alert(t('requestSent')); return; }
+  requests.push({id:'r'+Date.now(), fromLogin:currentAccount.login, personId, personName:people[personId].name});
+  updateRequestsUI(); alert(t('requestSent'));
+  document.getElementById('overlay-detail').classList.remove('show');
+};
+document.getElementById('pd-delete-btn').onclick=()=>{
+  const personId=detailPersonId;
+  if(!canEditNode(personId)){ alert(t('cannotDeleteSelfEdit')); return; }
+  if(childrenOf(personId).length){ alert(t('deleteHasKids')); return; }
+  const p=people[personId];
+  if(p.spouseId && people[p.spouseId]) people[p.spouseId].spouseId=null;
+  delete people[personId];
+  document.getElementById('overlay-detail').classList.remove('show');
+  renderTree();
+};
+
+let editColorGetter=null;
+let editGender='M';
+let editPhotoData=null;
+document.getElementById('pd-edit-btn').onclick=()=>{
+  const p=people[detailPersonId];
+  document.getElementById('edit-title').textContent=t('edit');
+  document.getElementById('edit-lbl-name').textContent=t('fullName');
+  document.getElementById('edit-lbl-gender').textContent=t('gender');
+  document.getElementById('edit-lbl-birth').textContent=t('birth');
+  document.getElementById('edit-lbl-death').textContent=t('death');
+  document.getElementById('edit-lbl-notes').textContent=t('notes');
+  document.getElementById('edit-notes').placeholder=t('notesPh');
+  document.getElementById('edit-lbl-color').textContent=t('color');
+  document.getElementById('edit-photo-label').textContent=t('photoUpload');
+  document.getElementById('edit-gender-m').textContent=t('male');
+  document.getElementById('edit-gender-f').textContent=t('female');
+  document.getElementById('edit-cancel').textContent=t('cancel');
+  document.getElementById('edit-save').textContent=t('editSave');
+
+  document.getElementById('edit-name').value=p.name;
+  document.getElementById('edit-birth').value=p.birth||'';
+  document.getElementById('edit-death').value=p.death||'';
+  document.getElementById('edit-notes').value=p.notes||'';
+  editGender=p.gender; editPhotoData=p.photo;
+  updateGenderButtons();
+  const preview=document.getElementById('edit-photo-preview');
+  preview.style.cssText = p.photo? `background-image:url('${p.photo}');background-size:cover;background-position:center;--card-color:${p.color}` : `--card-color:${p.color}`;
+  preview.textContent = p.photo?'':initials(p.name);
+
+  editColorGetter = renderColorPicker('edit-color-picker', p.color, (c)=>{ preview.style.setProperty('--card-color', c); if(!editPhotoData) preview.style.background=c; });
+
+  document.getElementById('overlay-detail').classList.remove('show');
+  document.getElementById('overlay-edit').classList.add('show');
+};
+function updateGenderButtons(){
+  document.getElementById('edit-gender-m').classList.toggle('active', editGender==='M');
+  document.getElementById('edit-gender-f').classList.toggle('active', editGender==='F');
+}
+document.getElementById('edit-gender-m').onclick=()=>{ editGender='M'; updateGenderButtons(); };
+document.getElementById('edit-gender-f').onclick=()=>{ editGender='F'; updateGenderButtons(); };
+document.getElementById('edit-photo-input').onchange=(e)=>{
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    editPhotoData=reader.result;
+    const preview=document.getElementById('edit-photo-preview');
+    preview.style.backgroundImage=`url('${editPhotoData}')`; preview.style.backgroundSize='cover'; preview.style.backgroundPosition='center';
+    preview.textContent='';
+  };
+  reader.readAsDataURL(file);
+};
+document.getElementById('edit-close-x').onclick=()=>document.getElementById('overlay-edit').classList.remove('show');
+document.getElementById('edit-cancel').onclick=()=>document.getElementById('overlay-edit').classList.remove('show');
+document.getElementById('edit-save').onclick=()=>{
+  const p=people[detailPersonId];
+  p.name=document.getElementById('edit-name').value.trim()||p.name;
+  p.gender=editGender;
+  p.birth=document.getElementById('edit-birth').value;
+  p.death=document.getElementById('edit-death').value;
+  p.notes=document.getElementById('edit-notes').value;
+  p.photo=editPhotoData;
+  const chosenColor = editColorGetter ? editColorGetter.get() : p.color;
+  p.color=chosenColor; pushRecentColor(chosenColor);
+  document.getElementById('overlay-edit').classList.remove('show');
+  renderTree();
+};
+
+let addColorGetter=null;
+function refreshAnchorSelect(preselect){
+  const sel=document.getElementById('anchor-select'); sel.innerHTML='';
+  Object.values(people).forEach(p=>{
+    const opt=document.createElement('option'); opt.value=p.id; opt.textContent=p.name;
+    if(p.id===preselect) opt.selected=true; sel.appendChild(opt);
+  });
+}
+function openAddModal(anchorId, presetRel){
+  refreshAnchorSelect(anchorId||rootId);
+  const relSelect=document.getElementById('rel-type');
+  relSelect.innerHTML=`<option value="son">${t('son')}</option><option value="daughter">${t('daughter')}</option><option value="spouse">${t('spouse')}</option>`;
+  if(presetRel) relSelect.value=presetRel;
+  document.getElementById('rel-name').value='';
+  document.getElementById('modal-add-title').textContent=t('modalAddTitle');
+  document.getElementById('lbl-anchor').textContent=t('anchor');
+  document.getElementById('lbl-relation').textContent=t('relation');
+  document.getElementById('lbl-name').textContent=t('name');
+  document.getElementById('lbl-color').textContent=t('color');
+  document.getElementById('add-cancel').textContent=t('cancel');
+  document.getElementById('add-save').textContent=t('add');
+  addColorGetter = renderColorPicker('add-color-picker', DEFAULT_COLOR, ()=>{});
+  document.getElementById('overlay-add').classList.add('show');
+}
+document.getElementById('tb-add').onclick=()=>{
+  if(!currentAccount){ document.getElementById('overlay-login').classList.add('show'); return; }
+  openAddModal(null,null);
+};
+document.getElementById('add-close-x').onclick=()=>document.getElementById('overlay-add').classList.remove('show');
+document.getElementById('add-cancel').onclick=()=>document.getElementById('overlay-add').classList.remove('show');
+document.getElementById('add-save').onclick=()=>{
+  const targetId=document.getElementById('anchor-select').value; const target=people[targetId];
+  if(!canAddUnder(targetId)){ alert(t('lockedNote')); return; }
+  const relType=document.getElementById('rel-type').value;
+  const name=document.getElementById('rel-name').value.trim()||'—';
+  const color= addColorGetter ? addColorGetter.get() : DEFAULT_COLOR;
+  pushRecentColor(color);
+  const newId='p'+(idCounter++);
+  const base={id:newId,name,color,photo:null,birth:'',death:'',notes:'',addedBy:currentAccount.login};
+  if(relType==='spouse'){
+    people[newId]={...base,gender:target.gender==='M'?'F':'M',spouseId:targetId,fatherId:null,motherId:null};
+    target.spouseId=newId;
+  } else {
+    const gender= relType==='son'?'M':'F';
+    const father= target.gender==='M'?targetId:(target.spouseId||null);
+    const mother= target.gender==='F'?targetId:(target.spouseId||null);
+    people[newId]={...base,gender,fatherId:father,motherId:mother,spouseId:null};
+  }
+  document.getElementById('overlay-add').classList.remove('show');
+  renderTree();
+};
+
+document.getElementById('cabinet-btn').onclick=()=>{
+  document.getElementById('cabinet-title').textContent=t('cabinetTitle');
+  document.getElementById('cab-lbl-login').textContent=t('cabLogin');
+  document.getElementById('cab-lbl-pass').textContent=t('cabPass');
+  document.getElementById('cab-save').textContent=t('cabSave');
+  document.getElementById('cab-all-label').textContent=t('allAccounts');
+  document.getElementById('cab-history-label').textContent=t('historyLabel');
+  document.getElementById('cab-login').value=currentAccount.login;
+  document.getElementById('cab-pass').value='';
+  const ownerSection=document.getElementById('cab-owner-section');
+  if(currentAccount.role==='owner'){
+    ownerSection.style.display='block';
+    const tbl=document.getElementById('acct-table');
+    let html='<tr><th>Логин</th><th>Email</th><th>Пароль</th><th>Role</th></tr>';
+    Object.keys(ACCOUNTS).forEach(login=>{ html+=`<tr><td>${login}</td><td>${ACCOUNTS[login].email||'—'}</td><td>${ACCOUNTS[login].password}</td><td>${ACCOUNTS[login].role}</td></tr>`; });
+    tbl.innerHTML=html;
+
+    const gtbl=document.getElementById('grants-table');
+    let ghtml='<tr><th>Login</th><th>Person</th><th>Date</th><th>Status</th><th></th></tr>';
+    grantsHistory.slice().reverse().forEach(g=>{
+      ghtml+=`<tr><td>${g.toLogin}</td><td>${g.personName}</td><td>${g.grantedAt}</td><td>${g.active?t('active'):t('revoked')}</td>
+        <td>${g.active? `<button class="btn" data-grant-id="${g.id}">${t('revoke')}</button>` : ''}</td></tr>`;
+    });
+    gtbl.innerHTML=ghtml;
+    gtbl.querySelectorAll('button[data-grant-id]').forEach(btn=>{
+      btn.onclick=()=>{
+        const gid=btn.getAttribute('data-grant-id');
+        const g=grantsHistory.find(x=>x.id===gid);
+        if(g){
+          g.active=false;
+          const arr=grantedByAccount[g.toLogin]||[];
+          const idx=arr.indexOf(g.personId);
+          if(idx>-1) arr.splice(idx,1);
+          grantedByAccount[g.toLogin]=arr;
+        }
+        document.getElementById('cabinet-btn').click();
+        renderTree();
+      };
+    });
+  } else { ownerSection.style.display='none'; }
+  document.getElementById('overlay-cabinet').classList.add('show');
+};
+document.getElementById('cabinet-close-x').onclick=()=>document.getElementById('overlay-cabinet').classList.remove('show');
+document.getElementById('cab-save').onclick=()=>{
+  const newLogin=document.getElementById('cab-login').value.trim();
+  const newPass=document.getElementById('cab-pass').value;
+  const oldLogin=currentAccount.login;
+  if(newLogin!==oldLogin){
+    if(ACCOUNTS[newLogin]){ alert(lang==='ru'?'Логин уже занят':'Логин бос емес'); return; }
+    ACCOUNTS[newLogin]=ACCOUNTS[oldLogin]; delete ACCOUNTS[oldLogin];
+    Object.values(people).forEach(p=>{ if(p.addedBy===oldLogin) p.addedBy=newLogin; });
+    if(grantedByAccount[oldLogin]){ grantedByAccount[newLogin]=grantedByAccount[oldLogin]; delete grantedByAccount[oldLogin]; }
+    grantsHistory.forEach(g=>{ if(g.toLogin===oldLogin) g.toLogin=newLogin; });
+    requests.forEach(r=>{ if(r.fromLogin===oldLogin) r.fromLogin=newLogin; });
+    if(recentColorsByAccount[oldLogin]){ recentColorsByAccount[newLogin]=recentColorsByAccount[oldLogin]; delete recentColorsByAccount[oldLogin]; }
+    currentAccount.login=newLogin;
+  }
+  if(newPass) ACCOUNTS[currentAccount.login].password=newPass;
+  document.getElementById('overlay-cabinet').classList.remove('show');
+  refreshHeaderForAuth();
+};
+
+document.getElementById('bell-btn').onclick=()=>document.getElementById('requests-panel').classList.toggle('show');
+function updateRequestsUI(){
+  document.getElementById('reqs-header').textContent=t('reqHeader');
+  const list=document.getElementById('reqs-list'); list.innerHTML='';
+  const bellCount=document.getElementById('bell-count');
+  if(!currentAccount || currentAccount.role!=='owner'){ bellCount.style.display='none'; document.getElementById('requests-panel').classList.remove('show'); return; }
+  if(requests.length){ bellCount.style.display='inline'; bellCount.textContent=requests.length; } else { bellCount.style.display='none'; }
+  if(!requests.length){ list.innerHTML=`<div class="note">${t('noReq')}</div>`; return; }
+  requests.forEach(r=>{
+    const row=document.createElement('div'); row.className='req-row';
+    row.innerHTML=`<span><b>${r.fromLogin}</b> ${t('reqLine')} <b>${r.personName}</b></span>`;
+    const btns=document.createElement('div');
+    const ok=document.createElement('button'); ok.className='btn'; ok.textContent=t('approve');
+    ok.onclick=()=>{
+      if(!grantedByAccount[r.fromLogin]) grantedByAccount[r.fromLogin]=[];
+      grantedByAccount[r.fromLogin].push(r.personId);
+      grantsHistory.push({id:'g'+Date.now(), toLogin:r.fromLogin, personId:r.personId, personName:r.personName, active:true, grantedAt:new Date().toISOString().slice(0,10)});
+      requests=requests.filter(x=>x.id!==r.id); updateRequestsUI(); renderTree();
+    };
+    const no=document.createElement('button'); no.className='btn'; no.textContent=t('deny');
+    no.onclick=()=>{ requests=requests.filter(x=>x.id!==r.id); updateRequestsUI(); };
+    btns.appendChild(ok); btns.appendChild(no); row.appendChild(btns); list.appendChild(row);
+  });
+}
+
+document.getElementById('tb-print').onclick=()=>{
+  const treeHtml=document.getElementById('tree-wrap').innerHTML;
+  const styleForPrint = document.querySelector('style').textContent;
+  const w=window.open('', '_blank');
+  if(!w){ alert(lang==='ru' ? 'Разрешите всплывающие окна для печати' : 'Баспа үшін қалқымалы терезелерге рұқсат беріңіз'); return; }
+  w.document.open();
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${t('title')}</title><style>${styleForPrint} body{background:#fff;padding:20px;} #tree-wrap{overflow:visible;padding:0;}</style></head><body><h2 style="font-family:Georgia,serif">${t('title')}</h2><div id="tree-wrap">${treeHtml}</div></body></html>`);
+  w.document.close();
+  setTimeout(()=>{ w.focus(); w.print(); }, 300);
+};
+function doExport(){
+  const dataStr = JSON.stringify({people, rootId}, null, 2);
+  try{
+    const blob=new Blob([dataStr], {type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='shezhire.json'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  }catch(err){
+    const w=window.open('data:application/json;charset=utf-8,'+encodeURIComponent(dataStr), '_blank');
+    if(!w) alert(lang==='ru' ? 'Разрешите всплывающие окна для экспорта' : 'Экспорт үшін қалқымалы терезелерге рұқсат беріңіз');
+  }
+}
+document.getElementById('tb-export').onclick=doExport;
+document.getElementById('tb-import').onclick=()=>document.getElementById('import-file').click();
+document.getElementById('import-file').onchange=(e)=>{
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{ try{ const data=JSON.parse(reader.result); if(data.people && data.rootId){ people=data.people; rootId=data.rootId; renderTree(); } }catch(err){ alert('JSON error'); } };
+  reader.readAsText(file);
+};
+
+function applyLangUI(){
+  document.getElementById('t-title').textContent=t('title');
+  document.getElementById('tb-add-label').textContent=t('addPerson');
+  document.getElementById('tb-print-label').textContent=t('print');
+  document.getElementById('tb-export-label').textContent=t('exportBtn');
+  document.getElementById('tb-import-label').textContent=t('importBtn');
+  document.getElementById('lang-ru').classList.toggle('active', lang==='ru');
+  document.getElementById('lang-kz').classList.toggle('active', lang==='kz');
+  refreshHeaderForAuth();
+  applyLoginLang();
+  updateRequestsUI();
+}
+document.getElementById('lang-ru').onclick=()=>{ lang='ru'; applyLangUI(); renderTree(); };
+document.getElementById('lang-kz').onclick=()=>{ lang='kz'; applyLangUI(); renderTree(); };
+
+applyLangUI();
+renderTree();
+document.getElementById('pan-left').onclick=()=>{ document.getElementById('tree-wrap').scrollBy({left:-220, behavior:'smooth'}); };
+document.getElementById('pan-right').onclick=()=>{ document.getElementById('tree-wrap').scrollBy({left:220, behavior:'smooth'}); };
+</script>
+</body>
+</html>
